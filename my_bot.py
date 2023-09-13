@@ -5,6 +5,9 @@ import time
 import sqlite3 as sql
 
 users = []
+con = 0
+cur = 0
+
 
 @bot.message_handler(commands=['start'])
 def startBot(message):
@@ -76,6 +79,15 @@ def answer(message):
         for row in rows:
             markup.add(types.InlineKeyboardButton(row, callback_data=row))
         bot.send_message(message.chat.id, "Выбери одну из предложеных БД:\n", parse_mode='html', reply_markup=markup)
+    elif message.text == "Подключиться к предыдущей":
+        con_ad = sql.connect('admin.db')
+        cur_ad = con_ad.cursor()
+        cur_ad.execute(f"SELECT bd FROM backlog WHERE chat_id = '{message.chat.id}'")
+        row = cur_ad.fetchall()
+        global con 
+        con = sql.connect(row)
+        global cur 
+        cur = con.cursor()
     else:
         answ = "Не понял Вас?" + "\U0001F612"
         bot.send_message(message.chat.id, answ, reply_markup=markup)
@@ -91,7 +103,7 @@ def response(function_call):
         if function_call.data == "yes":
             second_mess = "Мы облачная платформа для разработчиков и бизнеса. Более детально можешь ознакомиться с нами на нашем сайте!"
             markup = types.InlineKeyboardMarkup()
-            markup.add(types.InlineKeyboardButton("Перейти на сайт", url="https://timeweb.cloud/"))
+            markup.add(types.InlineKeyboardButton("Перейти на сайт", url="https://www.google.com/search?sca_esv=565090271&sxsrf=AM9HkKm3g8eieMWyfZD9xoXast8FxcnIkg:1694632386791&q=hezzz+%D0%9F%D0%BE%D0%BB%D1%8C%D1%81%D0%BA%D0%B0%D1%8F+%D0%BA%D0%BE%D1%80%D0%BE%D0%B2%D0%B0&si=ALGXSlZ3904Yafbxub-8ySOpbRJyPTbRcTtJ86fQJ_WQkblQHkp8Hz6I4ArbuD4aRm_jP8Jzl_Y8Yf2qCr67jx04MA0phIs70a_Fr0292b-W2bQn3ZjbSLozjOYFMsAKojjTfEA_0a8eDjlYgKhAX3s1xPeDmWBM9gY9IqTYYDH1beA4vobLzUla6r8t6ZyGQsYDywhGP5TH-zPSsjTQTUf63JDs2g1sbA%3D%3D&sa=X&ved=2ahUKEwjW0sHLpaiBAxUdFRAIHdc4CHAQ3LoBegQIDhAB&biw=1536&bih=723&dpr=1.25"))
             bot.send_message(function_call.message.chat.id, second_mess, reply_markup=markup)
             bot.answer_callback_query(function_call.id)
         elif function_call.data == "no":
