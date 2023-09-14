@@ -12,9 +12,9 @@ def gen_passw(length):
     return password
 
 users = []
-global con
-global cur
-
+con = 0
+cur = 0
+buff_add = []
 
 @bot.message_handler(commands=['start'])
 def startBot(message):
@@ -63,7 +63,9 @@ def helps(message):
 
 @bot.message_handler(content_types=['text'])
 def answer(message):
-    
+    global cur
+    global con 
+
     if not (message.chat.id in users): users.append(message.chat.id)
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     but = types.KeyboardButton("Помощь")
@@ -99,9 +101,21 @@ def answer(message):
         row = cur_ad.fetchall()
         con = sql.connect(row[0][0])
         cur = con.cursor()
-        comand = "Ctreate table `users_progect` if not exists (`name` string, `surname` string, `job_title` strung, `project` string, `avatar` blob)"
+        comand = "Create table if not exists `users_progect` (`name` string, `surname` string, `job_title` strung, `project` string, `avatar` blob)"
         cur.execute(comand)
         con.commit()
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        but1 = types.KeyboardButton("Добавить")
+        but2 = types.KeyboardButton("Удалить")
+        but3 = types.KeyboardButton("Изменить")
+        but4 = types.KeyboardButton("Найти")
+        but5 = types.KeyboardButton("Выйти")
+        markup.add(but1)
+        markup.add(but2)
+        markup.add(but3)
+        markup.add(but4)
+        markup.add(but5)
+        bot.send_message(message.chat.id, "Выбери одну из доступных функций: ", reply_markup=markup)
     elif message.text == "Создать новую бд":
         name_db = message.from_user.first_name+message.from_user.last_name+'.db'
         pasw = gen_passw(6)
@@ -113,14 +127,65 @@ def answer(message):
         cur_ad.close()
         con = sql.connect(name_db)
         cur = con.cursor()
-        comand = "Ctreate table `users_progect` if not exists (`name` string, `surname` string, `job_title` strung, `project` string, `avatar` blob)"
+        comand = "Create table if not exists `users_progect` (`name` string, `surname` string, `job_title` strung, `project` string, `avatar` blob)"
         cur.execute(comand)
         con.commit()
         bot.send_message(message.chat.id, f"База данных создана, имя '{name_db}', пароль '{pasw}'",)
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        but1 = types.KeyboardButton("Добавить")
+        but2 = types.KeyboardButton("Удалить")
+        but3 = types.KeyboardButton("Изменить")
+        but4 = types.KeyboardButton("Найти")
+        but5 = types.KeyboardButton("Выйти")
+        markup.add(but1)
+        markup.add(but2)
+        markup.add(but3)
+        markup.add(but4)
+        markup.add(but5)
+        bot.send_message(message.chat.id, "Выбери одну из доступных функций: ", reply_markup=markup)
+    elif message.text == "Добавить":
+        bot.send_message(message.chat.id, "Введите имя:")
+        buff_add = []
+        bot.register_next_step_handler(message, g_name)
+    elif message.text == "Выйти":
+        cur.close()
     else:
         answ = "Не понял Вас?" + "\U0001F612"
         bot.send_message(message.chat.id, answ, reply_markup=markup)
 
+def g_name(message):
+    buff_add.append(message.text.title())
+    bot.send_message(message.chat.id, "Введите фамилию:")
+    bot.register_next_step_handler(message, g_surname)
+
+def g_surname(message):
+    buff_add.append(message.text.title())
+    bot.send_message(message.chat.id, "Введите должность:")
+    bot.register_next_step_handler(message, g_job)
+
+def g_job(message):
+    buff_add.append(message.text.title())
+    bot.send_message(message.chat.id, "Введите название проекта:")
+    bot.register_next_step_handler(message, g_job)
+
+def g_project(message):
+    buff_add.append(message.text.title())
+    comand = "Insert into users_project(name, surname, job_title, project) values (?, ?, ?, ?)"
+    cur.execute(comand, (buff_add[0], buff_add[1], buff_add[2], buff_add[3]))
+    con.commit()
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    but1 = types.KeyboardButton("Добавить")
+    but2 = types.KeyboardButton("Удалить")
+    but3 = types.KeyboardButton("Изменить")
+    but4 = types.KeyboardButton("Найти")
+    but5 = types.KeyboardButton("Выйти")
+    markup.add(but1)
+    markup.add(but2)
+    markup.add(but3)
+    markup.add(but4)
+    markup.add(but5)
+    bot.send_message(message.chat.id, "Выбери одну из доступных функций: ", reply_markup=markup)
+    bot.register_next_step_handler(message, answer)
 
 @bot.callback_query_handler(func=lambda call:True)
 def response(function_call):
@@ -162,11 +227,25 @@ def response(function_call):
                 cur_ad.execute("INSERT INTO backlog VALUES (?, ?)", (function_call.message.chat.id, function_call.data))
             con_ad.commit()
             cur_ad.close()
+            global con
+            global cur
             con = sql.connect(function_call.data)
-            cur = con.cursor
-            comand = "Ctreate table `users_progect` if not exists (`name` string, `surname` string, `job_title` strung, `project` string, `avatar` blob)"
+            cur = con.cursor()
+            comand = "Create table if not exists `users_progect` (`name` string, `surname` string, `second_name` string, `job_title` strung, `project` string, `avatar` blob, 'date_start' date)"
             cur.execute(comand)
             con.commit()
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            but1 = types.KeyboardButton("Добавить")
+            but2 = types.KeyboardButton("Удалить")
+            but3 = types.KeyboardButton("Изменить")
+            but4 = types.KeyboardButton("Найти")
+            but5 = types.KeyboardButton("Выйти")
+            markup.add(but1)
+            markup.add(but2)
+            markup.add(but3)
+            markup.add(but4)
+            markup.add(but5)
+            bot.send_message(function_call.message.chat.id, "Выбери одну из доступных функций: ", reply_markup=markup)
             bot.answer_callback_query(function_call.id)
 
 
