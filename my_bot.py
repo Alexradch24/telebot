@@ -161,6 +161,38 @@ def answer(message):
         bot.send_message(message.chat.id, answ, reply_markup=markup)
 
 def find(message):
+    global con
+    cur = con.cursor()
+    fio = list(map(str, message.text.strip().split()))
+    if len(fio) == 1:
+        comand1 = "select * from users_project where name = ?"
+        cur.execute(comand1, (fio[0], ))
+        row = cur.fetchall()
+        if len(row) == 0:
+            comand1 = "select * from users_project where surname = ?"
+            cur.execute(comand1, (fio[0], ))
+            row = cur.fetchall()
+        if len(row) == 0:
+            bot.send_message(message.chat.id, "Таких людей нет")
+            bot.register_next_step_handler(message, answer)
+        else:
+            markup = types.InlineKeyboardMarkup()
+            for r in row:
+                markup.add(types.InlineKeyboardButton(r[0] + ' ' + r[1] + ' ' + str(r[2]), callback_data = f"find:'{r[0]}':'{r[1]}':'{r[2]}':'{r[3]}':'{r[4]}':'{r[6]}'"))
+            bot.send_message(message.chat.id, "Выбери интересующего человека:",reply_markup=markup)
+    if len(fio) == 2:
+        comand = "select * from users_project where name = ? and surname = ?"
+        cur.execute(comand, (fio[0], fio[1]))
+        row = cur.fetchall()
+        if len(row) == 0:
+            bot.send_message(message.chat.id, "Таких людей нет")
+            bot.register_next_step_handler(message, answer)
+        else:
+            markup = types.InlineKeyboardMarkup()
+            for r in row:
+                markup.add(types.InlineKeyboardButton(r[0] + ' ' + r[1] + ' ' + r[2], callback_data = f"find:'{r[0]}':'{r[1]}':'{r[2]}':'{r[3]}':'{r[4]}':'{r[6]}'"))
+            bot.send_message(message.chat.id, "Выбери интересующего человека:",reply_markup=markup)
+
 
 def g_name(message):
     buff_add.append(message.text.title())
@@ -243,6 +275,28 @@ def response(function_call):
             comand = "Create table if not exists `users_project` (`name` string, `surname` string, `second_name` string, `job_title` strung, `project` string, `avatar` blob, 'date_start' date)"
             cur.execute(comand)
             con.commit()
+            markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+            but1 = types.KeyboardButton("Добавить")
+            but2 = types.KeyboardButton("Удалить")
+            but3 = types.KeyboardButton("Изменить")
+            but4 = types.KeyboardButton("Найти")
+            but5 = types.KeyboardButton("Выйти")
+            markup.add(but1)
+            markup.add(but2)
+            markup.add(but3)
+            markup.add(but4)
+            markup.add(but5)
+            bot.send_message(function_call.message.chat.id, "Выбери одну из доступных функций: ", reply_markup=markup)
+            bot.answer_callback_query(function_call.id)
+        elif function_call.data[:4] == 'find':
+            answ = list(map(str, function_call.data.split(':')))
+            answ = answ[1:]
+            bot.send_message(function_call.message.chat.id, "Имя:" + answ[0])
+            bot.send_message(function_call.message.chat.id, "Фамилия:" + answ[1])
+            bot.send_message(function_call.message.chat.id, "Отчество:" + answ[2])
+            bot.send_message(function_call.message.chat.id, "Должность:" + answ[3])
+            bot.send_message(function_call.message.chat.id, "Проект:" + answ[4])
+            bot.send_message(function_call.message.chat.id, "Дата:" + answ[5])
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
             but1 = types.KeyboardButton("Добавить")
             but2 = types.KeyboardButton("Удалить")
