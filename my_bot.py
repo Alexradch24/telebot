@@ -143,15 +143,24 @@ def answer(message):
         markup.add(but4)
         markup.add(but5)
         bot.send_message(message.chat.id, "Выбери одну из доступных функций: ", reply_markup=markup)
+    
     elif message.text == "Добавить":
         bot.send_message(message.chat.id, "Введите имя:")
         buff_add = []
         bot.register_next_step_handler(message, g_name)
+    
     elif message.text == "Выйти":
         cur.close()
+
+    elif message.text == "Найти":
+        bot.send_message(message.chat.id, "Введите Имя и/или фамилию:")
+        bot.register_next_step_handler(message, find)
+
     else:
         answ = "Не понял Вас?" + "\U0001F612"
         bot.send_message(message.chat.id, answ, reply_markup=markup)
+
+def find(message):
 
 def g_name(message):
     buff_add.append(message.text.title())
@@ -166,7 +175,7 @@ def g_surname(message):
 def g_job(message):
     buff_add.append(message.text.title())
     bot.send_message(message.chat.id, "Введите название проекта:")
-    bot.register_next_step_handler(message, g_job)
+    bot.register_next_step_handler(message, g_project)
 
 def g_project(message):
     buff_add.append(message.text.title())
@@ -231,7 +240,7 @@ def response(function_call):
             global cur
             con = sql.connect(function_call.data)
             cur = con.cursor()
-            comand = "Create table if not exists `users_progect` (`name` string, `surname` string, `second_name` string, `job_title` strung, `project` string, `avatar` blob, 'date_start' date)"
+            comand = "Create table if not exists `users_project` (`name` string, `surname` string, `second_name` string, `job_title` strung, `project` string, `avatar` blob, 'date_start' date)"
             cur.execute(comand)
             con.commit()
             markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
