@@ -161,16 +161,22 @@ def answer(message):
         bot.send_message(message.chat.id, answ, reply_markup=markup)
 
 def find(message):
-    global con
+    con_ad = sql.connect('admin.db')
+    cur_ad = con_ad.cursor()
+    cur_ad.execute("select bd from backlog WHERE chat_id = ?", (message.chat.id, ))
+    rows = cur_ad.fetchall()
+    name_bd = rows[0][0]
+    con = sql.connect(name_bd)
     cur = con.cursor()
     fio = list(map(str, message.text.strip().split()))
+
     if len(fio) == 1:
         comand1 = "select * from users_project where name = ?"
-        cur.execute(comand1, (fio[0], ))
+        cur.execute(comand1, (fio[0].lower().title(), ))
         row = cur.fetchall()
         if len(row) == 0:
             comand1 = "select * from users_project where surname = ?"
-            cur.execute(comand1, (fio[0], ))
+            cur.execute(comand1, (fio[0].lower().title(), ))
             row = cur.fetchall()
         if len(row) == 0:
             bot.send_message(message.chat.id, "Таких людей нет")
@@ -182,7 +188,7 @@ def find(message):
             bot.send_message(message.chat.id, "Выбери интересующего человека:",reply_markup=markup)
     if len(fio) == 2:
         comand = "select * from users_project where name = ? and surname = ?"
-        cur.execute(comand, (fio[0], fio[1]))
+        cur.execute(comand, (fio[0].lower().title(), fio[1].lower().title()))
         row = cur.fetchall()
         if len(row) == 0:
             bot.send_message(message.chat.id, "Таких людей нет")
@@ -195,22 +201,29 @@ def find(message):
 
 
 def g_name(message):
-    buff_add.append(message.text.title())
+    buff_add.append(message.text.lower().title())
     bot.send_message(message.chat.id, "Введите фамилию:")
     bot.register_next_step_handler(message, g_surname)
 
 def g_surname(message):
-    buff_add.append(message.text.title())
+    buff_add.append(message.text.lower().title())
     bot.send_message(message.chat.id, "Введите должность:")
     bot.register_next_step_handler(message, g_job)
 
 def g_job(message):
-    buff_add.append(message.text.title())
+    buff_add.append(message.text.lower().title())
     bot.send_message(message.chat.id, "Введите название проекта:")
     bot.register_next_step_handler(message, g_project)
 
 def g_project(message):
-    buff_add.append(message.text.title())
+    con_ad = sql.connect('admin.db')
+    cur_ad = con_ad.cursor()
+    cur_ad.execute("select bd from backlog WHERE chat_id = ?", (message.chat.id, ))
+    rows = cur_ad.fetchall()
+    name_bd = rows[0][0]
+    con = sql.connect(name_bd)
+    cur = con.cursor()
+    buff_add.append(message.text.lower().title())
     comand = "Insert into users_project(name, surname, job_title, project) values (?, ?, ?, ?)"
     cur.execute(comand, (buff_add[0], buff_add[1], buff_add[2], buff_add[3]))
     con.commit()
