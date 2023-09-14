@@ -89,7 +89,7 @@ def answer(message):
         rows = cur_ad.fetchall()
         markup = types.InlineKeyboardMarkup()
         for row in rows:
-            markup.add(types.InlineKeyboardButton(str(row[0]), callback_data=str(row)))
+            markup.add(types.InlineKeyboardButton(str(row[0]), callback_data=row[0]))
         bot.send_message(message.chat.id, "Выбери одну из предложеных БД:\n", parse_mode='html', reply_markup=markup)
     
     elif message.text == "Подключиться к предыдущей":
@@ -99,6 +99,9 @@ def answer(message):
         row = cur_ad.fetchall()
         con = sql.connect(row[0][0])
         cur = con.cursor()
+        comand = "Ctreate table `users_progect` if not exists (`name` string, `surname` string, `job_title` strung, `project` string, `avatar` blob)"
+        cur.execute(comand)
+        con.commit()
     elif message.text == "Создать новую бд":
         name_db = message.from_user.first_name+message.from_user.last_name+'.db'
         pasw = gen_passw(6)
@@ -110,7 +113,10 @@ def answer(message):
         cur_ad.close()
         con = sql.connect(name_db)
         cur = con.cursor()
-        bot.send_message(message.chat.id, f"База данных создана, имя '{name_db}', пароль '{pasw}'")
+        comand = "Ctreate table `users_progect` if not exists (`name` string, `surname` string, `job_title` strung, `project` string, `avatar` blob)"
+        cur.execute(comand)
+        con.commit()
+        bot.send_message(message.chat.id, f"База данных создана, имя '{name_db}', пароль '{pasw}'",)
     else:
         answ = "Не понял Вас?" + "\U0001F612"
         bot.send_message(message.chat.id, answ, reply_markup=markup)
@@ -123,8 +129,8 @@ def response(function_call):
         con_ad = sql.connect('admin.db')
         cur_ad = con_ad.cursor()
         cur_ad.execute("SELECT bd FROM paswd")
-        rows_change = list(map(str, cur_ad.fetchall()))
-        
+        rows_change = [i[0] for i in cur_ad.fetchall()]
+                
         if function_call.data == "yes":
             second_mess = "Мы облачная платформа для разработчиков и бизнеса. Более детально можешь ознакомиться с нами на нашем сайте!"
             markup = types.InlineKeyboardMarkup()
@@ -156,6 +162,11 @@ def response(function_call):
                 cur_ad.execute("INSERT INTO backlog VALUES (?, ?)", (function_call.message.chat.id, function_call.data))
             con_ad.commit()
             cur_ad.close()
+            con = sql.connect(function_call.data)
+            cur = con.cursor
+            comand = "Ctreate table `users_progect` if not exists (`name` string, `surname` string, `job_title` strung, `project` string, `avatar` blob)"
+            cur.execute(comand)
+            con.commit()
             bot.answer_callback_query(function_call.id)
 
 
