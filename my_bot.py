@@ -89,7 +89,7 @@ def answer(message):
         rows = cur_ad.fetchall()
         markup = types.InlineKeyboardMarkup()
         for row in rows:
-            markup.add(types.InlineKeyboardButton(str(row), callback_data=str(row)))
+            markup.add(types.InlineKeyboardButton(str(row[0]), callback_data=str(row)))
         bot.send_message(message.chat.id, "Выбери одну из предложеных БД:\n", parse_mode='html', reply_markup=markup)
     
     elif message.text == "Подключиться к предыдущей":
@@ -97,9 +97,8 @@ def answer(message):
         cur_ad = con_ad.cursor()
         cur_ad.execute(f"SELECT bd FROM backlog WHERE chat_id = '{message.chat.id}'")
         row = cur_ad.fetchall()
-        con = sql.connect(row)
+        con = sql.connect(row[0][0])
         cur = con.cursor()
-   
     elif message.text == "Создать новую бд":
         name_db = message.from_user.first_name+message.from_user.last_name+'.db'
         pasw = gen_passw(6)
